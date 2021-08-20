@@ -7,6 +7,17 @@ app=Flask(__name__)
 CORS(app)
 
 #GET all users
+@app.route('/simple',methods=['GET'])
+def simple():
+    try:    
+        output={"test":"Success"}
+        return jsonify(output),200
+    except Exception as err:
+        print(err)
+        output={"Message":"Error occurred."}
+        return jsonify(output),500
+
+
 @app.route('/users',methods=['GET'])
 #@login_required
 #@admin_required
