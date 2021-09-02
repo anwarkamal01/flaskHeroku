@@ -59,7 +59,7 @@ def registerUser():
         return render_template("register.html",message="Error!")
 
 
-@app.route('/predict') #define the api route
+@app.route('/iris2.html') #define the api route
 @login_required
 def getPredictions():
     try:
