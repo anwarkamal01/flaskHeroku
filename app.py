@@ -71,7 +71,7 @@ def getPredictions():
         petalLength=float(request.args.get('petalLength'))
         petalWidth=float(request.args.get('petalWidth'))
         iris = datasets.load_iris()
-        loaded_model = pickle.load(open(".\iris_logistic_regression.pkl","rb"))
+        loaded_model = pickle.load(open("iris_logistic_regression.pkl","rb"))
         #Test out the model using some prediction
         s1=np.array([sepalLength, sepalWidth, petalLength, petalWidth])
         y_prob = loaded_model.predict_proba(s1.reshape(1,-1))
