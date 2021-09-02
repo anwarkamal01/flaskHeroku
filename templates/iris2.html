@@ -61,7 +61,7 @@
     <div class="col-sm-1 sidenav">
     </div>
     <div class="col-sm-10 text-left"> 
-        <form style="margin-top: 2rem;" action="http://localhost:5000/predict" method="GET">
+        <form style="margin-top: 2rem;" action="predict" method="GET">
             <div class="form-group">
 
                     <div class="form-group">
@@ -111,7 +111,7 @@
                 <td>{{a.petal_width}}</td>
                 <td>{{a.prediction}}</td>
                 <td>{{a.insertion_date}}</td>
-                <td><a href=http://localhost:5000/delete?id={{a.prediction_id}}>Delete</a></td>
+                <td><a href=delete?id={{a.prediction_id}}>Delete</a></td>
               </tr>
               {%endfor%}  
             </tbody>
