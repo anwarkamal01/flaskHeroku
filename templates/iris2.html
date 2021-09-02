@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Iris Prediction Page</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+  <style>
+    /* Remove the navbar's default margin-bottom and rounded borders */ 
+    .navbar {
+      margin-bottom: 0;
+      border-radius: 0;
+    }
+    
+    /* Set height of the grid so .sidenav can be 100% (adjust as needed) */
+    .row.content {height: 450px}
+    
+    /* Set gray background color and 100% height */
+    .sidenav {
+      padding-top: 20px;
+      background-color: #f1f1f1;
+      height: 100%;
+    }
+    
+    /* Set black background color, white text and some padding */
+    footer {
+      background-color: #555;
+      color: white;
+      padding: 15px;
+    }
+    
+    /* On small screens, set height to 'auto' for sidenav and grid */
+    @media screen and (max-width: 767px) {
+      .sidenav {
+        height: auto;
+        padding: 15px;
+      }
+      .row.content {height:auto;} 
+    }
+  </style>
+</head>
+<body>
+<div class="jumbotron text-center">
+  <p>Iris Flower Prediction</p>
+</div>
+<nav class="navbar navbar-inverse">
+  <div class="container-fluid">
+    <div class="collapse navbar-collapse" id="myNavbar">
+      <ul class="nav navbar-nav">
+        <li class="active"><a href="#">Home</a></li>
+        <li><a href="/logout">Logout</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+  
+<div class="container-fluid text-center">    
+  <div class="row content">
+    <div class="col-sm-1 sidenav">
+    </div>
+    <div class="col-sm-10 text-left"> 
+        <form style="margin-top: 2rem;" action="http://localhost:5000/predict" method="GET">
+            <div class="form-group">
+
+                    <div class="form-group">
+                        <input type="text" class="form-control" name="sepalLength" placeholder="Sepal Length" required="required">
+                    </div>
+                    <div class="form-group">
+                        <input type="text" class="form-control" name="sepalWidth" placeholder="Sepal Width" required="required">
+                    </div>
+                    <div class="form-group">
+                        <input type="text" class="form-control" name="petalLength" placeholder="Petal Length" required="required">
+                    </div>
+                    <div class="form-group">
+                        <input type="text" class="form-control" name="petalWidth" placeholder="Petal Width" required="required">
+                    </div>
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary btn-block" id="predict">Predict</button>
+                    </div>
+            </div>
+            <br>
+            {% if (prediction != '') %}            
+            <div class="alert alert-success">
+              <p class="text-center"><strong>{{prediction}} {{prob}}</strong></p>
+            </div>              
+            {% endif %}
+
+        </form>
+        
+        <div class="container">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>Sepal Length</th>
+                <th>Sepal Width</th>
+                <th>Petal Length</th>
+                <th>Petal Width</th>
+                <th>Prediction</th>
+                <th>Timestamp</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for a in pred%}              
+              <tr>
+                <td>{{a.sepal_length}}</td>
+                <td>{{a.sepal_width}}</td>
+                <td>{{a.petal_length}}</td>
+                <td>{{a.petal_width}}</td>
+                <td>{{a.prediction}}</td>
+                <td>{{a.insertion_date}}</td>
+                <td><a href=http://localhost:5000/delete?id={{a.prediction_id}}>Delete</a></td>
+              </tr>
+              {%endfor%}  
+            </tbody>
+          </table>
+        </div>
+      <div class="col-sm-1 sidenav">
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

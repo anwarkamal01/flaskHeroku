@@ -1,152 +1,128 @@
-from flask import Flask,jsonify,render_template,request
+from model.IrisPrediction import IrisPrediction
+from flask import Flask,jsonify,request,g,render_template,abort,make_response,redirect
 from model.User import User
 from validation.Validator import *
 from flask_cors import CORS
+#Load the iris datasets using sklearn : Note you can also d/l from UCI and read using pd.read_csv
+import numpy as np
+import pandas as pd
+import sklearn  #For Classical ML
+#from sklearn import datasets
+import pickle
+from sklearn import datasets
 
 app=Flask(__name__)
 CORS(app)
 
-#GET all users
-@app.route('/simple',methods=['GET'])
-def simple():
-    try:    
-        output={"test":"Success"}
-        return jsonify(output),200
-    except Exception as err:
-        print(err)
-        output={"Message":"Error occurred."}
-        return jsonify(output),500
-
-
-@app.route('/users',methods=['GET'])
-#@login_required
-#@admin_required
-def getUsers():
-    try:
-        #print(g.role)
-        users=User.getUsers()
-
-        output={"Users":users}
-        return jsonify(output),200
-    except Exception as err:
-        print(err)
-        output={"Message":"Error occurred."}
-        return jsonify(output),500
-
-#Get 1 User based on userid supplied
-@app.route('/users/<int:userid>',methods=['GET'])
-#@login_required
-#@require_isAdminOrSelf
-def getOneUser(userid):
-
-    try:
-        users=User.getUserByUserid(userid) 
-        print("INT function called")
-        if len(users)>0:
-            output={"Users":users}
-            return jsonify(output),200
-        else:
-            output={"Users":""}
-            return jsonify(output),404
-    except Exception as err:
-        print(err)
-        output={"Message":"Error occurred."}
-        return jsonify(output),500
-
-#Get 1 User based on userid supplied
-@app.route('/users/<string:userid>',methods=['GET'])
-def getOneStringUser(userid):
-
-    try:
-        users=User.getUserByUserid(int(userid)) 
-        print("String function called")
-        if len(users)>0:
-            output={"Users":users}
-            return jsonify(output),200
-        else:
-            output={"Users":""}
-            return jsonify(output),404
-    except Exception as err:
-        print(err)
-        output={"Message":"Error occurred."}
-        return jsonify(output),500
-
-#POST 1 new user - Insert
-@app.route('/users',methods=['POST'])
-def insertUser():
-
-    try:
-        #extract the incoming request data from user
-        userData=request.json#request.form.to_dict() ->if using html forms
-        print(userData)
-        print("****************************just before calling database insert1")
-        #userid=userData['userid']
-        username=userData['userName']
-        email=userData['email']
-        role=userData['role']
-        password=userData['password']
-
-        #call the model to insert
-        print("****************************just before calling database insert2")
-        count=User.insertUser(username,email,role,password)
-
-        output={"Rows Inserted":count}      
-        return jsonify(output),201
-    except Exception as err:
-        print(err)
-        output={"Message":"Error occurred."}
-        return jsonify(output),500
-
-
-@app.route('/users/<int:userid>', methods=['PUT'])
-def updateUser(userid):
-    jsonBody=request.json
-    print(jsonBody);
-   
-    count=User.updateUser(userid,jsonBody['email'],jsonBody['password'])
-    
-    if(count==1):        
-        return '{"message": "User with id '+str(userid)+ ' has been successfully updated!"}',200
-    else:
-        return '{"message": "User with id '+str(userid)+ ' does not exist!"}',404
-
-
-@app.route('/users/<int:userid>',methods=['DELETE'])
-@login_required
-def deleteUser(userid):
-    try:
-
-        count=User.deleteUser(userid)
-        output={"Rows Affected":count}
-        return jsonify(output),200
-    
-    except Exception as err:
-        print(err)
-        output={"Message":"Error occurred."}
-        return jsonify(output),500
-
-
-#generating a resource, JWT
-@app.route('/users/login',methods=['POST'])
+#code the routes
+@app.route('/login', methods=['POST'])
 def loginUser():
     try:
-        userData=request.json
-        print("#################################### Before calling database loginUser")
-        jwtToken=User.loginUser(userData['email'],userData['password'])
+        email=request.form['email']
+        pwd=request.form['pwd']
+        output=User.loginUser({"email":email,"password":pwd})
+        #print(output)
+        if output["jwt"]=="":
+            return render_template("login.html",message="Invalid Login Credentials!")
+       
+        else:
+            predictions=IrisPrediction.getPredictions(output['userName'])
+            print(predictions)
+            resp = make_response(render_template("iris2.html",msg="Hello people!",pred=predictions))
+            resp.set_cookie('jwt', output["jwt"])
+            resp.set_cookie('userName',output['userName'])
+            resp.set_cookie('userid',str(output['userid']))
+            return resp
+    except Exception as err:
+        print(err)
+        return render_template("login.html",message="Error!")
 
-        output={"JWT":jwtToken}
 
-        status=200
-        if jwtToken=="":
-            status=404
+@app.route('/register', methods=['POST'])
+def registerUser():
+    try:
+        userName=request.form['userName']
+        email=request.form['email']
+        password=request.form['password']
+        confirmPassword=request.form['confirmPassword']
 
-        return jsonify(output),status
+        if password != confirmPassword:
+            return render_template("register.html",message="Passwords do not match!")
+
+        User.insertUser(userName,email,"member",password)
+        
+        return render_template("register.html",message="Account created successfully!")
+
 
     except Exception as err:
         print(err)
-        output={"Message":"Error occurred."}
-        return jsonify(output),500
+        return render_template("register.html",message="Error!")
 
+
+@app.route('/predict') #define the api route
+@login_required
+def getPredictions():
+    try:
+        #Insert new prediction
+        userName=request.cookies.get("userName")
+        userid=request.cookies.get("userid")
+        sepalLength=float(request.args.get('sepalLength'))
+        sepalWidth=float(request.args.get('sepalWidth'))
+        petalLength=float(request.args.get('petalLength'))
+        petalWidth=float(request.args.get('petalWidth'))
+        iris = datasets.load_iris()
+        loaded_model = pickle.load(open(".\iris_logistic_regression.pkl","rb"))
+        #Test out the model using some prediction
+        s1=np.array([sepalLength, sepalWidth, petalLength, petalWidth])
+        y_prob = loaded_model.predict_proba(s1.reshape(1,-1))
+        #prediction
+        prediction=iris.target_names[np.argmax(y_prob)]
+        #prediction probability
+        probability=np.max(y_prob)
+        print(prediction)
+        IrisPrediction.insertPrediction(userid,sepalLength,sepalWidth,petalLength,petalWidth,prediction)    
+        predictions=IrisPrediction.getPredictions(userName)
+        return render_template("iris2.html",pred=predictions,prediction=prediction,prob=probability)
+    except Exception as err:
+        print(err)
+        return render_template("iris2.html")
+
+
+@app.route('/delete') #define the api route
+@login_required
+def delete():
+    try:
+        userName=request.cookies.get("userName")
+        prediction_id=int(request.args.get("id"))
+        IrisPrediction.deletePrediction(prediction_id)
+        predictions=IrisPrediction.getPredictions(userName)
+        return render_template("iris2.html",pred=predictions)
+    except Exception as err:
+        print(err)
+        return render_template("iris2.html")
+
+
+
+@app.route('/logout') #define the api route
+def logout():
+    resp = make_response(redirect("login.html"))
+    resp.delete_cookie('jwt')
+    
+    return resp
+
+@app.route('/<string:url>')
+def staticPage(url):
+    print("static page",url)
+    try:
+        return render_template(url)
+    except Exception as err:
+        abort(404)
+
+@app.errorhandler(404)
+def page_not_found(e):
+    # note that we set the 404 status explicitly
+    return render_template('404.html'), 404
+ 
 
 if __name__ == '__main__':
-    app.run(debug=True) #start the flask app with default port 5000
+    app.run(debug=True)

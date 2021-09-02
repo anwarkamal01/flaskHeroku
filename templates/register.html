@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link href="/static/css/login.css" rel="stylesheet" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+   
+</head>  
+<body>  
+
+
+    <div class="login-form">
+        <form action="http://localhost:5000/register" method="POST"> 
+     
+            <h3 class="text-center">ACCOUNT SIGN UP</h2>       
+            <div class="form-group">
+                <input type="text" class="form-control" name="userName" placeholder="userName" required="required">
+            </div>
+            <div class="form-group">
+                <input type="text" class="form-control" name="email" placeholder="Email" required="required">
+            </div>
+            <div class="form-group">
+                <input type="password" class="form-control" name="password" placeholder="Password" required="required">
+            </div>
+            <div class="form-group">
+                <input type="password" class="form-control" name="confirmPassword" placeholder="Confirm Password" required="required">
+            </div>
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary btn-block" id="signUp">SIGN UP</button>
+            </div>
+<!--        <div class="clearfix">
+                <label class="pull-left checkbox-inline"><input type="checkbox"> Remember me</label>
+                <a href="#" class="pull-right">Forgot Password?</a>
+            </div>
+ -->        
+            <div class="text-center">
+                <!-- <label class="pull-left checkbox-inline"><input type="checkbox"> Remember me</label> -->
+                <p>Have an account? Login here!</p>
+                <a href="login.html">SIGN IN</a>
+
+            </div>
+            <br>
+            <p><span id="msg">{{message}}</span></p>
+        
+        </form> 
+    </div>
+</body>  
+</html>
